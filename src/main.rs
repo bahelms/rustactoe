@@ -42,8 +42,8 @@ fn toss_coin() -> u8 {
 }
 
 fn choose_faction() -> String {
-    let mut faction = prompt("Choose your faction: X, O -- q to quit");
-    while faction != "X" && faction != "O" {
+    let mut faction = prompt("Choose your faction: X, O").to_lowercase();
+    while faction != "x" && faction != "o" {
         println!("Unknown value. Try again");
         faction = choose_faction();
     }
