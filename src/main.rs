@@ -1,10 +1,9 @@
 extern crate rand;
 
 use std::io;
+use std::collections::HashMap;
 
 // const END_GAME: u16 = 511;
-// let mut x_positions: u16 = 0b0;
-// let mut o_positions: u16 = 0b0;
 // x_positions |= 0b000_010_000;
 // o_positions |= 0b100_000_000;
 // x_positions |= 0b000_000_001;
@@ -21,10 +20,14 @@ fn print_title() {
 }
 
 fn game_loop() {
+    let mut board = HashMap::with_capacity(2);
+    board.insert("x", 0b0);
+    board.insert("o", 0b0);
+
     loop {
         let _faction = choose_faction();
         decide_first_player();
-        println!("\nDisplay board here...");
+        display_board(board);
         break;
     }
 }
@@ -64,4 +67,30 @@ fn decide_first_player() {
     } else {
         println!("Machine goes first!");
     }
+}
+
+fn display_board(board: HashMap<&str, u16>) {
+    let x_bits = format!("{:09b}", board.get("x").unwrap());
+    let o_bits = format!("{:09b}", board.get("o").unwrap());
+    let mut rows = [
+        Vec::with_capacity(3),
+        Vec::with_capacity(3),
+        Vec::with_capacity(3),
+    ];
+
+    for (n, (xbit, obit)) in x_bits.chars().zip(o_bits.chars()).enumerate() {
+        if xbit == '1' {
+            rows[n % 3].push("X");
+        } else if obit == '1' {
+            rows[n % 3].push("O");
+        } else {
+            rows[n % 3].push(" ");
+        }
+    }
+
+    let board = rows.iter()
+        .map(|row| row.join("|"))
+        .collect::<Vec<String>>()
+        .join("\n-----\n");
+    println!("\n{}", board);
 }
