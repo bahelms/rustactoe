@@ -20,10 +20,10 @@ pub struct GameState<'a> {
     pub win_states: HashMap<u8, Vec<[usize; 2]>>,
 }
 
-pub fn init_state<'a>(players: &'a [Player; 2]) -> GameState<'a> {
+pub fn init_state<'a>(player: &'a Player) -> GameState<'a> {
     GameState {
         board: [" "; 9],
-        active_player: pick_active_player(players),
+        active_player: player,
         win_states: init_win_states(),
     }
 }
@@ -46,6 +46,10 @@ pub fn create_players(user_faction: String) -> [Player; 2] {
     let user = Player { name: "user".to_string(), faction: user_faction };
     let computer = Player { name: "computer".to_string(), faction: computer_faction };
     [user, computer]
+}
+
+pub fn pick_active_player(players: &[Player]) -> &Player {
+    &players[random::<f64>().round() as usize]
 }
 
 pub fn start_game<'a>(mut state: GameState<'a>, players: &'a [Player]) {
@@ -82,10 +86,6 @@ pub fn start_game<'a>(mut state: GameState<'a>, players: &'a [Player]) {
             _ => ()
         }
     }
-}
-
-fn pick_active_player(players: &[Player]) -> &Player {
-    &players[random::<f64>().round() as usize]
 }
 
 fn init_win_states() -> HashMap<u8, Vec<[usize; 2]>> {
@@ -146,15 +146,18 @@ fn is_winner(state: &GameState) -> bool {
 }
 
 fn matches_win_state(win_states: &Vec<[usize; 2]>, state: &GameState) -> bool {
-    let mut match_count = 0;
     for &win_state in win_states {
+        let mut match_count = 0;
         for &index in win_state.iter() {
             if state.board[index] == state.active_player.faction {
                 match_count += 1;
+                if match_count == 2 {
+                    return true;
+                }
             }
         }
     }
-    match_count == 2
+    false
 }
 
 fn first_position(state: &GameState) -> Option<u8> {
@@ -169,8 +172,8 @@ fn first_position(state: &GameState) -> Option<u8> {
 }
 
 fn board_is_full(state: &GameState) -> bool {
-    for cell in state.board.iter() {
-        if *cell != " " {
+    for &cell in state.board.iter() {
+        if cell == " " {
             return false;
         }
     }
@@ -187,6 +190,10 @@ fn prompt(message: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_player() -> Player {
+        Player { name: "Bob".to_string(), faction: "X".to_string() }
+    }
 
     #[test]
     fn test_is_winner_with_empty_board() {
@@ -226,5 +233,15 @@ mod tests {
             win_states: init_win_states(),
         };
         assert_eq!(first_position(&state), Some(0));
+    }
+
+    #[test]
+    fn test_check_game_state_when_board_is_full() {
+        let player = test_player();
+        let mut state = init_state(&player);
+        state.board = ["X", "O", "O",
+                       "O", "X", "X",
+                       "X", "O", "O"];;
+        assert_eq!(Some("CAT"), check_game_state(&state));
     }
 }
